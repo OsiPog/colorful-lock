@@ -1,0 +1,70 @@
+## Author : Osi Bluber
+## Github : @OsiPog
+
+// Screen size
+screen.w = Window.GetWidth(0);
+screen.h = Window.GetHeight(0);
+
+// State
+state.status = "play";
+
+// Init images
+for (i = 0; i < 89; i++)
+  startup_image[i] = Image("colorful_loop/progress-" + i + ".png");
+loop_sprite = Sprite();
+loop_sprite.SetX(Window.GetX() + (Window.GetWidth(0) / 2 - startup_image[0].GetWidth() / 2)); # Place images in the center
+loop_sprite.SetY(Window.GetY() + (Window.GetHeight(0) / 2 - startup_image[0].GetHeight() / 2));
+
+for (i = 0; i < 48; i++)
+  sliced_image[i] = Image("circle_alt/progress-" + i + ".png");
+circle_alt_sprite = Sprite();
+circle_alt_sprite.SetX(Window.GetX() + (Window.GetWidth(0) / 2 - circle_alt_image[0].GetWidth() / 2)); # Place images in the center
+circle_alt_sprite.SetY(Window.GetY() + (Window.GetHeight(0) / 2 - circle_alt_image[0].GetHeight() / 2));
+
+all_sprites = [circle_alt_sprite, loop_sprite];
+
+fun HideAllSprites ()
+  {
+    for (i = 0; i < all_sprites.Length;i++) {
+      all_sprites[i].SetOpacity(0);
+    } 
+  }
+
+progress = 0;
+
+fun RefreshCallback ()
+  {
+    if (state.status == "pause") return;
+
+    index_loop = Math.Int(progress / 1.75) % 89;
+    index_circle = Math.Int(progress / 2) % 48;
+
+    loop_sprite.SetImage(startup_image[index_loop]);
+
+    progress++;
+  }
+
+Plymouth.SetRefreshFunction(RefreshCallback);
+
+//------------------------------------- Password prompt -------------------------------
+
+fun DisplayPasswordCallback (prompt, bullets)
+  {
+    state.status = "pause";
+  }
+
+Plymouth.SetDisplayPasswordFunction(DisplayPasswordCallback);
+
+//--------------------------- Normal display (unset all text) ----------------------
+fun DisplayNormalCallback() {
+    state.status = "play";
+}
+Plymouth.SetDisplayNormalFunction(DisplayNormalCallback);
+
+//----------------------------------------- Message --------------------------------
+fun MessageCallback(text) {
+    message.image = Image.Text(text, 1, 1, 1);
+    message.sprite = Sprite(message.image);
+    message.sprite.SetPosition(screen.half.w - message.image.GetWidth() / 2, message.image.GetHeight());
+}
+Plymouth.SetMessageFunction(MessageCallback);
