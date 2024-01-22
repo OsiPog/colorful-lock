@@ -6,58 +6,118 @@ screen.w = Window.GetWidth(0);
 screen.h = Window.GetHeight(0);
 
 // State
-state.status = "play";
+state.status = "normal";
 
 // Init images
 for (i = 0; i < 89; i++)
-  startup_image[i] = Image("colorful_loop/progress-" + i + ".png");
+  loop_image[i] = Image("colorful_loop/progress-" + i + ".png");
 loop_sprite = Sprite();
-loop_sprite.SetX(Window.GetX() + (Window.GetWidth(0) / 2 - startup_image[0].GetWidth() / 2)); # Place images in the center
-loop_sprite.SetY(Window.GetY() + (Window.GetHeight(0) / 2 - startup_image[0].GetHeight() / 2));
+loop_sprite.SetX(Window.GetX() + (screen.w / 2 - loop_image[0].GetWidth() / 2)); # Place images in the center
+loop_sprite.SetY(Window.GetY() + (screen.h / 2 - loop_image[0].GetHeight() / 2));
 
 for (i = 0; i < 48; i++)
-  sliced_image[i] = Image("circle_alt/progress-" + i + ".png");
+  circle_alt_image[i] = Image("circle_alt/progress-" + i + ".png");
 circle_alt_sprite = Sprite();
-circle_alt_sprite.SetX(Window.GetX() + (Window.GetWidth(0) / 2 - circle_alt_image[0].GetWidth() / 2)); # Place images in the center
-circle_alt_sprite.SetY(Window.GetY() + (Window.GetHeight(0) / 2 - circle_alt_image[0].GetHeight() / 2));
+circle_alt_sprite.SetX(Window.GetX() + (screen.w / 2 - circle_alt_image[0].GetWidth() / 2)); # Place images in the center
+circle_alt_sprite.SetY(Window.GetY() + (screen.h / 2 - circle_alt_image[0].GetHeight() / 2));
 
-all_sprites = [circle_alt_sprite, loop_sprite];
+lock_left_sprite = Sprite();
+lock_image = Image("lock_left.png");
+lock_left_sprite.SetImage(lock_image);
+lock_left_sprite.SetX(Window.GetX() + (screen.w / 2 - lock_image.GetWidth() / 2)); # Place images in the center
+lock_left_sprite.SetY(Window.GetY() + (screen.h / 2 - lock_image.GetHeight() / 2));
+lock_left_sprite.SetZ(10);
 
-fun HideAllSprites ()
-  {
-    for (i = 0; i < all_sprites.Length;i++) {
-      all_sprites[i].SetOpacity(0);
-    } 
-  }
+lock_right_sprite = Sprite();
+lock_image = Image("lock_right.png");
+lock_right_sprite.SetImage(lock_image);
+lock_right_sprite.SetX(Window.GetX() + (screen.w / 2 - lock_image.GetWidth() / 2)); # Place images in the center
+lock_right_sprite.SetY(Window.GetY() + (screen.h / 2 - lock_image.GetHeight() / 2));
+lock_left_sprite.SetZ(11);
 
-progress = 0;
+lock_sprite = Sprite();
+lock_image = Image("lock.png");
+lock_sprite.SetImage(lock_image);
+lock_sprite.SetX(Window.GetX() + (screen.w / 2 - lock_image.GetWidth() / 2)); # Place images in the center
+lock_sprite.SetY(Window.GetY() + (screen.h / 2 - lock_image.GetHeight() / 2));
+lock_sprite.SetZ(12);
+lock_sprite.SetOpacity(0);
+
+t = 0;
+loop_has_played = 0;
+circle_alt_opacity = 0;
+lock_opacity = 0;
+
+fun ApplyVector(sprite, vx, vy) {
+    x = sprite.GetX();
+    y = sprite.GetY();
+    sprite.SetX(x + Math.Int(vx));
+    sprite.SetY(y + Math.Int(vy));
+}
 
 fun RefreshCallback ()
   {
-    if (state.status == "pause") return;
+    index_loop = Math.Int(t / 1.75) % 89;
+    index_circle = Math.Int(t / 2.4) % 48;
 
-    index_loop = Math.Int(progress / 1.75) % 89;
-    index_circle = Math.Int(progress / 2) % 48;
+    if (Plymouth.GetMode() == "boot") {
+        circle_alt_sprite.SetOpacity(circle_alt_opacity);
+        lock_left_sprite.SetOpacity(lock_opacity);
+        lock_right_sprite.SetOpacity(lock_opacity);
 
-    loop_sprite.SetImage(startup_image[index_loop]);
+        // Always play loop once at the start
+        if (loop_has_played == 0) {
+            loop_sprite.SetImage(loop_image[index_loop]);
+            t++;
+            if (index_loop >= 88) {
+                loop_has_played = 1;
+                loop_sprite.SetOpacity(0);
+                t = 0;
+            }
+        }
 
-    progress++;
+        if ((loop_has_played == 1) && (state.status == "password")) {
+            if (lock_opacity < 1) {
+                lock_opacity += 0.05;
+                lock_sprite.SetOpacity(lock_opacity);
+            }
+        }
+
+        if ((loop_has_played == 1) && (state.status == "normal")) {
+            if (circle_alt_opacity < 1) {
+                circle_alt_opacity += 0.01;
+            }
+            // lock break animation
+            if (lock_opacity > 0) {
+                lock_sprite.SetOpacity(0);
+                lock_opacity -= 0.05;
+            }
+
+            circle_alt_sprite.SetImage(circle_alt_image[index_circle]);
+            t++;
+        }
+
+    }
+
+    if (Plymouth.GetMode() == "shutdown") {
+      circle_alt_sprite.SetImage(circle_alt_image[index_circle]);
+      t++;
+    }
   }
 
 Plymouth.SetRefreshFunction(RefreshCallback);
 
 //------------------------------------- Password prompt -------------------------------
 
-fun DisplayPasswordCallback (prompt, bullets)
-  {
-    state.status = "pause";
-  }
+fun DisplayPasswordCallback (prompt, bullets) {
+    state.status = "password";
+}
 
 Plymouth.SetDisplayPasswordFunction(DisplayPasswordCallback);
 
 //--------------------------- Normal display (unset all text) ----------------------
 fun DisplayNormalCallback() {
-    state.status = "play";
+    state.status = "normal";
 }
 Plymouth.SetDisplayNormalFunction(DisplayNormalCallback);
 
