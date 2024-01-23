@@ -21,29 +21,21 @@ circle_alt_sprite = Sprite();
 circle_alt_sprite.SetX(Window.GetX() + (screen.w / 2 - circle_alt_image[0].GetWidth() / 2)); # Place images in the center
 circle_alt_sprite.SetY(Window.GetY() + (screen.h / 2 - circle_alt_image[0].GetHeight() / 2));
 
-lock_left_sprite = Sprite();
-lock_image = Image("lock_left.png");
-lock_left_sprite.SetImage(lock_image);
-lock_left_sprite.SetX(Window.GetX() + (screen.w / 2 - lock_image.GetWidth() / 2)); # Place images in the center
-lock_left_sprite.SetY(Window.GetY() + (screen.h / 2 - lock_image.GetHeight() / 2));
-lock_left_sprite.SetZ(10);
-
-lock_right_sprite = Sprite();
-lock_image = Image("lock_right.png");
-lock_right_sprite.SetImage(lock_image);
-lock_right_sprite.SetX(Window.GetX() + (screen.w / 2 - lock_image.GetWidth() / 2)); # Place images in the center
-lock_right_sprite.SetY(Window.GetY() + (screen.h / 2 - lock_image.GetHeight() / 2));
-lock_left_sprite.SetZ(11);
-
 lock_sprite = Sprite();
-lock_image = Image("lock.png");
-lock_sprite.SetImage(lock_image);
-lock_sprite.SetX(Window.GetX() + (screen.w / 2 - lock_image.GetWidth() / 2)); # Place images in the center
-lock_sprite.SetY(Window.GetY() + (screen.h / 2 - lock_image.GetHeight() / 2));
-lock_sprite.SetZ(12);
-lock_sprite.SetOpacity(0);
+for (i = 0; i < 33; i++)
+  lock_locked_image[i] = Image("lock_locked/progress-" + i + ".png");
+for (i = 0; i < 12; i++)
+  lock_open_image[i] = Image("lock_open/progress-" + i + ".png");
+lock_sprite.SetX(Window.GetX() + (screen.w / 2 - lock_locked_image[0].GetWidth() / 2)); # Place images in the center
+lock_sprite.SetY(Window.GetY() + (screen.h / 2 - lock_locked_image[0].GetHeight() / 2));
+
+loop_sprite.SetZ(1);
+lock_sprite.SetZ(2);
+circle_alt_sprite.SetZ(3);
 
 t = 0;
+index_lock_open = 0;
+lock_has_played = 0;
 loop_has_played = 0;
 circle_alt_opacity = 0;
 lock_opacity = 0;
@@ -62,8 +54,7 @@ fun RefreshCallback ()
 
     if (Plymouth.GetMode() == "boot") {
         circle_alt_sprite.SetOpacity(circle_alt_opacity);
-        lock_left_sprite.SetOpacity(lock_opacity);
-        lock_right_sprite.SetOpacity(lock_opacity);
+        lock_sprite.SetOpacity(lock_opacity);
 
         // Always play loop once at the start
         if (loop_has_played == 0) {
@@ -79,18 +70,23 @@ fun RefreshCallback ()
         if ((loop_has_played == 1) && (state.status == "password")) {
             if (lock_opacity < 1) {
                 lock_opacity += 0.05;
-                lock_sprite.SetOpacity(lock_opacity);
             }
+            // static lock
+            lock_sprite.SetImage(lock_open_image[0]);
         }
 
         if ((loop_has_played == 1) && (state.status == "normal")) {
             if (circle_alt_opacity < 1) {
                 circle_alt_opacity += 0.01;
             }
-            // lock break animation
-            if (lock_opacity > 0) {
-                lock_sprite.SetOpacity(0);
-                lock_opacity -= 0.05;
+            // lock open animation
+            if (lock_has_played == 0) {
+                index_lock_open = Math.Int(t / 2) % 12;
+                lock_sprite.SetImage(lock_open_image[index_lock_open]);
+
+                if (index_lock_open > 10) {
+                    lock_has_played = 1;
+                }
             }
 
             circle_alt_sprite.SetImage(circle_alt_image[index_circle]);
