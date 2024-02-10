@@ -76,21 +76,25 @@ fun RefreshCallback ()
         }
 
         if ((loop_has_played == 1) && (state.status == "normal")) {
-            if (circle_alt_opacity < 1) {
-                circle_alt_opacity += 0.01;
-            }
             // lock open animation
-            if (lock_has_played == 0) {
+            if (lock_has_played == 0 ) {
                 index_lock_open = Math.Int(t / 2) % 12;
                 lock_sprite.SetImage(lock_open_image[index_lock_open]);
 
                 if (index_lock_open > 10) {
                     lock_has_played = 1;
+                    t = 0;
                 }
-            }
 
-            circle_alt_sprite.SetImage(circle_alt_image[index_circle]);
-            t++;
+                t++;
+            }
+            else {
+                if (circle_alt_opacity < 1) {
+                    circle_alt_opacity += 0.05;
+                }
+                circle_alt_sprite.SetImage(circle_alt_image[index_circle]);
+                t++;
+            }
         }
 
     }
