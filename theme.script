@@ -101,10 +101,10 @@ fun RefreshCallback ()
             }
         }
 
-        if ((loop_has_played == 1) && (state.status == "normal") && (lock_locked_has_played == 1)) {
+        if ((loop_has_played == 1) && (state.status == "normal")) {
             // lock open animation
             if (lock_has_played == 0 ) {
-                index_lock_open = Math.Int(t / 2) % 12;
+                index_lock_open = Math.Int(t / 2.5) % 12;
                 lock_sprite.SetImage(lock_open_image[index_lock_open]);
 
                 if (index_lock_open > 10) {
